@@ -10,10 +10,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
-    getAuthEmail,
-    getOwnProfileWithTrainer,
-    ProfileSummary,
-    updateOwnProfile,
+  getAuthEmail,
+  getOwnProfileWithTrainer,
+  ProfileSummary,
+  updateOwnProfile,
 } from '@/services/profile';
 import { uploadAvatar } from '@/services/storage';
 
@@ -75,7 +75,7 @@ export default function UsersScreen() {
       setLoading(true);
       await updateOwnProfile({
         display_name: displayName,
-        phone: phoneE164 || null,
+        phone: (phoneE164 ?? '').trim() || null,
         bio,
       });
       Alert.alert('Pronto', 'Perfil atualizado!');

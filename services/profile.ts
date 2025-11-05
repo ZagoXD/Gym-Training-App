@@ -38,7 +38,7 @@ export async function getOwnProfileWithTrainer(userId: string): Promise<ProfileS
 export async function updateStudentProfile(
   userId: string,
   display_name: string,
-  phone: string,
+  phone: string | null,
   trainerId: string
 ) {
   const { error } = await supabase

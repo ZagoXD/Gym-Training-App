@@ -35,17 +35,16 @@ export default function SignUpScreen() {
   const [phoneE164, setPhoneE164] = useState('');
   
   async function handle() {
-    if (!displayName || !email || !password) {
+    if (!displayName || !email || !password)
       return Alert.alert('Atenção', 'Preencha nome, e-mail e senha.');
-    }
-    if (password.length < 6) {
+    if (password.length < 6)
       return Alert.alert('Atenção', 'A senha deve ter pelo menos 6 caracteres.');
-    }
-    if (password !== confirm) {
+    if (password !== confirm)
       return Alert.alert('Atenção', 'As senhas não coincidem.');
-    }
 
-    const phoneE164 = phoneRef.current?.getE164() ?? '';
+    const e164 = (phoneRef.current?.getE164() ?? '').trim();
+    const phoneToSave: string | null = e164.length ? e164 : null;
+    console.log({ phoneE164FromRef: e164, phoneToSave });
 
     setLoading(true);
     try {
@@ -63,10 +62,10 @@ export default function SignUpScreen() {
       const userId = await signUpNoConfirm(email, password);
 
       if (role === 'trainer') {
-        const key = await assignTrainerKeyWithRetry(userId, displayName, phoneE164, 'trainer');
+        const key = await assignTrainerKeyWithRetry(userId, displayName, phoneToSave ?? '', 'trainer');
         Alert.alert('Conta criada!', `Sua chave de treinador é: ${key}`);
       } else {
-        await updateStudentProfile(userId, displayName, phoneE164, trainerId!);
+        await updateStudentProfile(userId, displayName, phoneToSave, trainerId!);
       }
 
       router.replace('/(tabs)');
@@ -76,6 +75,7 @@ export default function SignUpScreen() {
       setLoading(false);
     }
   }
+
 
   return (
     <View style={[styles.c, { backgroundColor: isDark ? '#000' : '#fff' }]}>

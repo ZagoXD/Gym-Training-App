@@ -1,6 +1,7 @@
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   AsYouType,
+  getCountryCallingCode,
   parsePhoneNumberFromString,
   CountryCode as PhoneCountryCode,
 } from 'libphonenumber-js';
@@ -12,7 +13,6 @@ export type PhoneFieldHandle = { getE164: () => string };
 
 type Props = {
   defaultCountry?: Iso2CountryCode;
-  /** <- NOVO: pré-carrega o campo com +E.164 (ex: "+5516992330309") */
   initialE164?: string;
   onChangeE164?: (e164: string) => void;
   placeholder?: string;
@@ -23,18 +23,36 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
     const isDark = useColorScheme() === 'dark';
 
     const [country, setCountry] = useState<Iso2CountryCode>(defaultCountry);
-    const [callingCode, setCallingCode] = useState<string>('55');
+    const [callingCode, setCallingCode] = useState<string>(getCountryCallingCode(defaultCountry as any));
     const [pretty, setPretty] = useState<string>('');
-    const [hydrated, setHydrated] = useState(false); // evita sobrescrever enquanto o usuário digita
+    const [hydrated, setHydrated] = useState(false);
 
     const inputRef = useRef<TextInput>(null);
+    const lastE164Ref = useRef<string>('');
+
+    useEffect(() => {
+      try {
+        const cc = getCountryCallingCode(country as any);
+        setCallingCode(cc);
+      } catch { /* noop */ }
+    }, [country]);
 
     useImperativeHandle(ref, () => ({
       getE164: () => {
+        const cc = (() => {
+          try { return getCountryCallingCode(country as any); } catch { return callingCode; }
+        })();
+
         const digits = pretty.replace(/\D/g, '');
-        const probe = `+${callingCode}${digits}`;
+        const probe = `+${cc}${digits}`;
         const parsed = parsePhoneNumberFromString(probe);
-        return parsed?.isValid() ? parsed.format('E.164') : '';
+
+        if (parsed?.isValid()) {
+          const e164 = parsed.format('E.164');
+          lastE164Ref.current = e164;
+          return e164;
+        }
+        return lastE164Ref.current || '';
       },
     }));
 
@@ -44,27 +62,30 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
     }
 
     function emitE164(prettyLocal: string) {
+      const cc = (() => {
+        try { return getCountryCallingCode(country as any); } catch { return callingCode; }
+      })();
       const digits = prettyLocal.replace(/\D/g, '');
-      const probe = `+${callingCode}${digits}`;
+      const probe = `+${cc}${digits}`;
       const parsed = parsePhoneNumberFromString(probe);
-      onChangeE164?.(parsed?.isValid() ? parsed.format('E.164') : '');
+
+      const e164 = parsed?.isValid() ? parsed.format('E.164') : '';
+      if (e164) lastE164Ref.current = e164;
+      onChangeE164?.(e164);
     }
 
-    // <- NOVO: hidrata com o número salvo (E.164)
     useEffect(() => {
       if (!initialE164 || hydrated) return;
       const parsed = parsePhoneNumberFromString(initialE164);
       if (parsed?.country) {
         setCountry(parsed.country as Iso2CountryCode);
-        setCallingCode(parsed.countryCallingCode);
         const fmt = new AsYouType(parsed.country as any);
         const prettyLocal = fmt.input(parsed.nationalNumber || '');
         setPretty(prettyLocal);
         onChangeE164?.(parsed.format('E.164'));
       }
       setHydrated(true);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialE164, hydrated]);
+    }, [initialE164, hydrated, onChangeE164]);
 
     const borderColor = useMemo(() => (isDark ? '#555' : '#ccc'), [isDark]);
 
@@ -80,8 +101,6 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
               withFlag
               onSelect={(c: Country) => {
                 setCountry(c.cca2 as Iso2CountryCode);
-                const cc = Array.isArray(c.callingCode) ? c.callingCode[0] : c.callingCode;
-                setCallingCode(cc || '');
                 setPretty(prev => {
                   const next = formatLocal(prev.replace(/\D/g, ''));
                   setTimeout(() => emitE164(next), 0);
@@ -96,7 +115,35 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
             ref={inputRef}
             value={pretty}
             onChangeText={(txt) => {
-              const next = formatLocal(txt.replace(/\D/g, ''));
+              const raw = txt.trim();
+              if (raw.startsWith('+')) {
+                const parsed = parsePhoneNumberFromString(raw);
+                if (parsed?.country) {
+                  setCountry(parsed.country as Iso2CountryCode);
+                  const fmt = new AsYouType(parsed.country as any);
+                  const prettyLocal = fmt.input(parsed.nationalNumber || '');
+                  setPretty(prettyLocal);
+                  const e164 = parsed.format('E.164');
+                  lastE164Ref.current = e164;
+                  onChangeE164?.(e164);
+                  return;
+                }
+              }
+              const digits = raw.replace(/\D/g, '');
+              if (digits.length >= 6) {
+                const guess = parsePhoneNumberFromString('+' + digits);
+                if (guess?.country) {
+                  if (guess.country !== country) setCountry(guess.country as Iso2CountryCode);
+                  const fmt = new AsYouType(guess.country as any);
+                  const prettyLocal = fmt.input(guess.nationalNumber || '');
+                  setPretty(prettyLocal);
+                  const e164 = guess.isValid() ? guess.format('E.164') : '';
+                  if (e164) lastE164Ref.current = e164;
+                  onChangeE164?.(e164);
+                  return;
+                }
+              }
+              const next = formatLocal(digits);
               setPretty(next);
               emitE164(next);
             }}
@@ -106,6 +153,7 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
             {...(Platform.OS === 'web' ? { inputMode: 'numeric' as any } : {})}
             style={[styles.input, { color: isDark ? '#fff' : '#000' }]}
           />
+
         </View>
       </View>
     );
