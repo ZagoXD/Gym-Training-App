@@ -11,13 +11,12 @@ import TextField from '@/components/ui/TextField';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { signUpNoConfirm } from '@/services/auth';
 import { updateStudentProfile } from '@/services/profile';
-import { assignTrainerKeyWithRetry, validateTrainerKey } from '@/services/trainer';
-
-function formatTrainerKeyInput(v: string) {
-  const raw = v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-  if (raw.length <= 4) return raw;
-  return raw.slice(0, 4) + '-' + raw.slice(4);
-}
+import {
+  assignTrainerKeyWithRetry,
+  normalizeTrainerKeyDisplay,
+  normalizeTrainerKeyRaw,
+  validateTrainerKey,
+} from '@/services/trainer';
 
 type Role = 'trainer' | 'student';
 
@@ -25,15 +24,15 @@ export default function SignUpScreen() {
   const isDark = useColorScheme() === 'dark';
 
   const [displayName, setDisplayName] = useState('');
-  const [email, setEmail]         = useState('');
-  const [password, setPassword]   = useState('');
-  const [confirm, setConfirm]     = useState('');
-  const [role, setRole]           = useState<Role>('student');
-  const [typedKey, setTypedKey]   = useState('');
-  const [loading, setLoading]     = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [role, setRole] = useState<Role>('student');
+  const [typedKey, setTypedKey] = useState('');
+  const [loading, setLoading] = useState(false);
   const phoneRef = useRef<PhoneFieldHandle>(null);
   const [phoneE164, setPhoneE164] = useState('');
-  
+
   async function handle() {
     if (!displayName || !email || !password)
       return Alert.alert('Atenção', 'Preencha nome, e-mail e senha.');
@@ -44,14 +43,17 @@ export default function SignUpScreen() {
 
     const e164 = (phoneRef.current?.getE164() ?? '').trim();
     const phoneToSave: string | null = e164.length ? e164 : null;
-    console.log({ phoneE164FromRef: e164, phoneToSave });
 
     setLoading(true);
     try {
       let trainerId: string | null = null;
+
       if (role === 'student') {
-        const key = typedKey.toUpperCase();
-        const valid = await validateTrainerKey(key.replace('-', ''));
+        if (normalizeTrainerKeyRaw(typedKey).length < 8) {
+          setLoading(false);
+          return Alert.alert('Atenção', 'A chave deve ter 8 caracteres.');
+        }
+        const valid = await validateTrainerKey(typedKey);
         if (!valid) {
           setLoading(false);
           return Alert.alert('Atenção', 'Chave de treinador inválida.');
@@ -62,7 +64,12 @@ export default function SignUpScreen() {
       const userId = await signUpNoConfirm(email, password);
 
       if (role === 'trainer') {
-        const key = await assignTrainerKeyWithRetry(userId, displayName, phoneToSave ?? '', 'trainer');
+        const key = await assignTrainerKeyWithRetry(
+          userId,
+          displayName,
+          phoneToSave ?? '',
+          'trainer',
+        );
         Alert.alert('Conta criada!', `Sua chave de treinador é: ${key}`);
       } else {
         await updateStudentProfile(userId, displayName, phoneToSave, trainerId!);
@@ -76,16 +83,11 @@ export default function SignUpScreen() {
     }
   }
 
-
   return (
     <View style={[styles.c, { backgroundColor: isDark ? '#000' : '#fff' }]}>
       <TextField placeholder="Nome" value={displayName} onChangeText={setDisplayName} />
 
-      <PhoneField
-        ref={phoneRef}
-        defaultCountry="BR"
-        onChangeE164={setPhoneE164}
-      />
+      <PhoneField ref={phoneRef} defaultCountry="BR" onChangeE164={setPhoneE164} />
 
       <TextField placeholder="Email" autoCapitalize="none" value={email} onChangeText={setEmail} />
 
@@ -95,7 +97,7 @@ export default function SignUpScreen() {
       <RadioGroup
         options={[
           { label: 'Sou aluno', value: 'student' },
-          { label: 'Sou treinador', value: 'trainer' },
+        { label: 'Sou treinador', value: 'trainer' },
         ]}
         value={role}
         onChange={setRole}
@@ -106,12 +108,16 @@ export default function SignUpScreen() {
           placeholder="Chave do treinador (ex: AB12-CD34)"
           autoCapitalize="characters"
           value={typedKey}
-          onChangeText={(v) => setTypedKey(formatTrainerKeyInput(v))}
+          onChangeText={(v) => setTypedKey(normalizeTrainerKeyDisplay(v))}
           maxLength={9}
         />
       )}
 
-      <PrimaryButton title={loading ? 'Criando...' : 'Criar conta'} onPress={handle} loading={loading} />
+      <PrimaryButton
+        title={loading ? 'Criando...' : 'Criar conta'}
+        onPress={handle}
+        loading={loading}
+      />
       <Link href="/sign-in" style={[styles.b, { color: isDark ? '#bbb' : '#666' }]}>
         Já tenho conta
       </Link>
