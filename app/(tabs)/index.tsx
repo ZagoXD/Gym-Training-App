@@ -61,7 +61,7 @@ export default function HomeScreen() {
 
       {profile?.role === 'trainer' && (
         <ThemedView style={styles.section}>
-          <ThemedText type="subtitle">Meus alunos</ThemedText>
+          <ThemedText type="subtitle">Meus alunosaaa</ThemedText>
           {students.length === 0 ? (
             <ThemedText>Nenhum aluno vinculado.</ThemedText>
           ) : (
