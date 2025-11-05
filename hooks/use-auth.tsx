@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/supabase';
+import { getRememberMe, setRememberMe } from '@/services/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Ctx = { userId: string|null; loading: boolean; };
+type Ctx = { userId: string | null; loading: boolean };
 const AuthCtx = createContext<Ctx>({ userId: null, loading: true });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -9,8 +10,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
+      const remember = await getRememberMe();
+
       const { data } = await supabase.auth.getUser();
-      setState({ userId: data.user?.id ?? null, loading: false });
+
+      if (!remember && data.user) {
+        await supabase.auth.signOut();
+        await setRememberMe(false);
+        setState({ userId: null, loading: false });
+      } else {
+        setState({ userId: data.user?.id ?? null, loading: false });
+      }
+
       const { data: sub } = supabase.auth.onAuthStateChange((_ev, sess) => {
         setState({ userId: sess?.user?.id ?? null, loading: false });
       });
