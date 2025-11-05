@@ -31,6 +31,17 @@ export default function TabLayout() {
         headerRight: () => <SignOutButton />,
       }}
     />
+    <Tabs.Screen
+      name="users"
+      options={{
+        title: 'Perfil',
+        headerShown: true,
+        tabBarIcon: ({ color }) => (
+          <IconSymbol size={28} name="person.crop.circle" color={color} />
+        ),
+        headerRight: () => <SignOutButton />,
+      }}
+    />
     </Tabs>
   );
 }
