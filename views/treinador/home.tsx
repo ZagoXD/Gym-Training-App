@@ -88,9 +88,8 @@ export default function TreinadorHome() {
                 style={styles.studentCard}
                 onPress={() => {
                   Alert.alert(
-                    'Debug - Dados do Aluno',
-                    `user_id: ${s.user_id}\ndisplay_name: ${s.display_name ?? 'null'}\navatar_url: ${s.avatar_url ?? 'null'}`,
-                    [{ text: 'OK' }]
+                    'otario KKKKKKKKKKKKKKKKKKK',
+                    'alem de ser otario, comi sua tia kkkkkkkkkkkkkkkkkkkkkkk'
                   );
                 }}
               >
