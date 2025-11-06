@@ -1,4 +1,5 @@
 import { ExerciseCardData } from '@/services/wger';
+import { labelCategoriaPt } from '@/utils/labels';
 import React from 'react';
 import {
   FlatList,
@@ -19,6 +20,7 @@ export default function ExerciseModal({
   borderColor,
   fg,
   muted,
+  actions,
 }: {
   open: ExerciseCardData | null;
   onClose: () => void;
@@ -26,6 +28,7 @@ export default function ExerciseModal({
   borderColor: string;
   fg: string;
   muted: string;
+  actions?: React.ReactNode;
 }) {
   const { width } = useWindowDimensions();
 
@@ -33,54 +36,26 @@ export default function ExerciseModal({
 
   return (
     <Modal visible={!!open} transparent animationType="slide" onRequestClose={onClose}>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.55)',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-        }}
-      >
-        <View
-          style={{
-            width: '100%',
-            maxHeight: '85%',
-            borderTopLeftRadius: 18,
-            borderTopRightRadius: 18,
-            borderWidth: 1,
-            padding: 14,
-            backgroundColor: bg,
-            borderColor,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: 8,
-            }}
-          >
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text
-                style={{
-                  color: fg,
-                  fontWeight: '800',
-                  fontSize: 18,
-                }}
-                numberOfLines={2}
-              >
+      <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.55)', alignItems:'center', justifyContent:'flex-end' }}>
+        <View style={{ width:'100%', maxHeight:'85%', borderTopLeftRadius:18, borderTopRightRadius:18, borderWidth:1, padding:14, backgroundColor:bg, borderColor }}>
+
+          <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+            <View style={{ flex:1, paddingRight:12 }}>
+              <Text style={{ color: fg, fontWeight:'800', fontSize:18 }} numberOfLines={2}>
                 {open.namePt}
               </Text>
-
               <Text style={{ color: muted, marginTop: 4 }}>
-                {open.category ?? '—'}
+                {open.category ? labelCategoriaPt(open.category) : '—'}
               </Text>
             </View>
 
-            <Pressable onPress={onClose} style={{ padding: 8 }}>
-              <Text style={{ color: muted, fontSize: 14 }}>Fechar</Text>
-            </Pressable>
+            <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
+              {actions ? <View style={{ marginRight: 6 }}>{actions}</View> : null}
+
+              <Pressable onPress={onClose} style={{ padding: 8 }}>
+                <Text style={{ color: muted, fontSize: 14 }}>Fechar</Text>
+              </Pressable>
+            </View>
           </View>
 
           {!!open.focus.length && (
