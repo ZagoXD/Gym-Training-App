@@ -1,15 +1,8 @@
+import type { Gender } from '@/services/profile';
 import { ExerciseCardData } from '@/services/wger';
 import { labelCategoriaPt } from '@/utils/labels';
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
-
-import Abdomen from '@/assets/icons/abdomen.svg';
-import Bracos from '@/assets/icons/bracos.svg';
-import Cardio from '@/assets/icons/cardio.svg';
-import Costas from '@/assets/icons/costas.svg';
-import Peito from '@/assets/icons/peito.svg';
-import Pernas from '@/assets/icons/pernas.svg';
-import Pescoco from '@/assets/icons/pescoco.svg';
 
 type Props = {
   item: ExerciseCardData;
@@ -18,26 +11,51 @@ type Props = {
   borderColor: string;
   fg: string;
   muted: string;
+  gender: Gender | null;
 };
 
-function IconForCategory({ categoriaPt, muted }: { categoriaPt: string; muted: string }) {
-  const key = categoriaPt.toLowerCase();
+const ASSETS = {
+  female: {
+    abdomen: require('@/assets/icons/abs_feminino.png'),
+    bracos: require('@/assets/icons/bracos_feminino.png'),
+    cardio: require('@/assets/icons/cardio.png'),
+    costas: require('@/assets/icons/costas_feminino.png'),
+    peito: require('@/assets/icons/peito_feminino.png'),
+    pernas: require('@/assets/icons/pernas_feminino.png'),
+    pescoco: require('@/assets/icons/pescoco_feminino.png'),
+  },
+  male: {
+    abdomen: require('@/assets/icons/abs_masculino.png'),
+    bracos: require('@/assets/icons/bracos_masculino.png'),
+    cardio: require('@/assets/icons/cardio.png'),
+    costas: require('@/assets/icons/costas_masculino.png'),
+    peito: require('@/assets/icons/peito_masculino.png'),
+    pernas: require('@/assets/icons/pernas_masculino.png'),
+    pescoco: require('@/assets/icons/pescoco_masculino.png'),
+  },
+} as const;
 
-  if (key.includes('abdômen')) return <Abdomen width={56} height={56} />;
-  if (key.includes('braço'))   return <Bracos  width={56} height={56} />;
-  if (key.includes('costas'))  return <Costas  width={56} height={56} />;
-  if (key.includes('peito'))   return <Peito   width={56} height={56} />;
-  if (key.includes('perna') || key.includes('panturr') || key.includes('adutor'))
-    return <Pernas width={56} height={56} />;
-  if (key.includes('cardio'))  return <Cardio  width={56} height={56} />;
-  if (key.includes('pescoço')) return <Pescoco width={56} height={56} />;
-
-  return <Text style={{ color: muted, fontSize: 12 }}>Sem imagem</Text>;
+function slugFromCategoriaPt(categoriaPt: string): keyof typeof ASSETS.female | null {
+  const key = (categoriaPt || '').toLowerCase();
+  if (key.includes('abdômen')) return 'abdomen';
+  if (key.includes('braço')) return 'bracos';
+  if (key.includes('costas')) return 'costas';
+  if (key.includes('peito')) return 'peito';
+  if (key.includes('perna') || key.includes('panturr') || key.includes('adutor')) return 'pernas';
+  if (key.includes('cardio')) return 'cardio';
+  if (key.includes('pescoço')) return 'pescoco';
+  return null;
 }
 
-export default function ExerciseCard({ item, onPress, cardBg, borderColor, fg, muted }: Props) {
+export default function ExerciseCard({
+  item, onPress, cardBg, borderColor, fg, muted, gender,
+}: Props) {
   const categoriaPt = item.category ? labelCategoriaPt(item.category) : '—';
   const hasPhoto = !!item.images[0];
+
+  const genderKey = gender === 'female' ? 'female' : 'male';
+  const slug = slugFromCategoriaPt(categoriaPt);
+  const iconSrc = slug ? ASSETS[genderKey][slug] : null;
 
   return (
     <Pressable
@@ -70,8 +88,10 @@ export default function ExerciseCard({ item, onPress, cardBg, borderColor, fg, m
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
           />
+        ) : iconSrc ? (
+          <Image source={iconSrc} style={{ width: 72, height: 72 }} resizeMode="contain" />
         ) : (
-          <IconForCategory categoriaPt={categoriaPt} muted={muted} />
+          <Text style={{ color: muted, fontSize: 12 }}>Sem imagem</Text>
         )}
       </View>
 

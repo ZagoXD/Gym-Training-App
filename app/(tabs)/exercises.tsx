@@ -4,6 +4,7 @@ import Chips, { type ChipItem } from '@/components/ui/Chips';
 import { useAuth } from '@/hooks/use-auth';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useExercises } from '@/hooks/use-exercises';
+import type { Gender } from '@/services/profile';
 import { getOwnProfileWithTrainer } from '@/services/profile';
 import type { ExerciseCardData } from '@/services/wger';
 import { labelCategoriaPt } from '@/utils/labels';
@@ -14,6 +15,7 @@ export default function ExercisesScreen() {
   const { userId } = useAuth();
   const isDark = useColorScheme() === 'dark';
   const [isTrainer, setIsTrainer] = useState(false);
+  const [gender, setGender] = useState<Gender | null>(null);
   const [open, setOpen] = useState<ExerciseCardData | null>(null);
 
   const { state, actions } = useExercises();
@@ -25,6 +27,7 @@ export default function ExercisesScreen() {
     (async () => {
       const me = await getOwnProfileWithTrainer(userId);
       setIsTrainer(me.role === 'trainer');
+      setGender(me.gender ?? 'other');
     })();
   }, [userId]);
 
@@ -101,6 +104,7 @@ export default function ExercisesScreen() {
             borderColor={border}
             fg={fg}
             muted={muted}
+            gender={gender}
           />
         )}
         onEndReachedThreshold={0.4}
