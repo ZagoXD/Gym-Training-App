@@ -19,7 +19,7 @@ export type StudentRow = { user_id: string; display_name: string | null };
 export async function getOwnProfileWithTrainer(userId: string): Promise<ProfileSummary> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, phone, bio, avatar_url, role, trainer_key, trainer_id, gender') // <-- gender
+    .select('display_name, phone, bio, avatar_url, role, trainer_key, trainer_id, gender')
     .eq('user_id', userId)
     .single();
   if (error) throw error;
