@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-export default async function TreinadorHome() {
+export default function TreinadorHome() {
   const { userId } = useAuth();
   const [profile, setProfile] = useState<ProfileSummary | null>(null);
   const [students, setStudents] = useState<StudentRow[]>([]);

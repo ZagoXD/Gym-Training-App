@@ -55,7 +55,7 @@ export async function updateStudentProfile(
 }
 
 export async function listMyStudents(): Promise<StudentRow[]> {
-  const { data, error } = await supabase.rpc('list_my_students');
+  const { data, error } = await supabase.rpc('list_my_students2');
   if (error) throw error;
   return data ?? [];
 }
