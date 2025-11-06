@@ -1,26 +1,33 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { ThemedText } from '@/components/themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-export function RadioGroup<T extends string>({ options, value, onChange }:{
+export function RadioGroup<T extends string>({
+  options, value, onChange,
+}:{
   options: {label:string; value:T}[];
   value: T; onChange:(v:T)=>void;
 }) {
-  const isDark = useColorScheme() === 'dark';
+  const border = useThemeColor({}, 'border');
+  const tint = useThemeColor({}, 'tint');
+  const text = useThemeColor({}, 'text');
+
   return (
     <View style={styles.row}>
       {options.map(o=>(
         <Pressable key={o.value} onPress={()=>onChange(o.value)} style={styles.item}>
           <View style={[
-            styles.dot, { borderColor: isDark ? '#aaa' : '#666' },
-            value===o.value && { backgroundColor: isDark ? '#aaa' : '#666' }
+            styles.dot,
+            { borderColor: border, backgroundColor: value===o.value ? tint : 'transparent' },
           ]}/>
-          <Text style={{ color: isDark ? '#fff' : '#000' }}>{o.label}</Text>
+          <ThemedText style={{ color: text }}>{o.label}</ThemedText>
         </Pressable>
       ))}
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   row:{ flexDirection:'row', gap:16, alignItems:'center', justifyContent:'center', marginVertical:8 },
   item:{ flexDirection:'row', gap:8, alignItems:'center' },

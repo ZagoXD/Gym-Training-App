@@ -4,12 +4,12 @@ import PhoneField, { PhoneFieldHandle } from '@/components/ui/PhoneField';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import TextField from '@/components/ui/TextField';
 import { useAuth } from '@/hooks/use-auth';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, View } from 'react-native';
 
 import { RadioGroup } from '@/components/ui/RadioGroup';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   getAuthEmail,
   getOwnProfileWithTrainer,
@@ -28,10 +28,13 @@ export default function UsersScreen() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [gender, setGender] = useState<Gender>('other');
   const [loading, setLoading] = useState(false);
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
   const phoneRef = useRef<PhoneFieldHandle>(null);
   const [phoneE164, setPhoneE164] = useState<string>('');
+
+  const muted = useThemeColor({}, 'muted');
+  const border = useThemeColor({}, 'border');
+  const cardBg = useThemeColor({}, 'card');
+  const text = useThemeColor({}, 'text');
 
   useEffect(() => {
     if (!userId) return;
@@ -50,7 +53,7 @@ export default function UsersScreen() {
     })();
   }, [userId]);
 
-    async function pickPhoto() {
+  async function pickPhoto() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
 
@@ -92,24 +95,42 @@ export default function UsersScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 48 }}
+      keyboardShouldPersistTaps="handled"
+    >
       <ThemedView style={styles.screen}>
         <ThemedText type="title">Meu perfil</ThemedText>
 
         <View style={styles.avatarRow}>
-          <View style={styles.avatarWrap}>
-            {avatarUrl ? <Image source={{ uri: avatarUrl }} style={styles.avatar} /> : <View style={[styles.avatar, styles.avatarPlaceholder]} />}
+          <View style={[styles.avatarWrap, { backgroundColor: cardBg }]}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, { backgroundColor: border }]} />
+            )}
           </View>
-          <PrimaryButton title={loading ? 'Enviando...' : 'Trocar foto'} onPress={pickPhoto} disabled={loading} />
+          <PrimaryButton
+            title={loading ? 'Enviando...' : 'Trocar foto'}
+            onPress={pickPhoto}
+            disabled={loading}
+          />
         </View>
 
         <TextField label="Nome" value={displayName} onChangeText={setDisplayName} />
-        <Text style={{ color: isDark ? '#fff' : '#000', marginBottom: -4 }}>Telefone</Text>
-        <PhoneField defaultCountry="BR" initialE164={phoneE164} onChangeE164={setPhoneE164} placeholder="Telefone" />
+
+        <ThemedText style={{ marginBottom: -4, color: text }}>Telefone</ThemedText>
+        <PhoneField
+          ref={phoneRef}
+          defaultCountry="BR"
+          initialE164={phoneE164}
+          onChangeE164={setPhoneE164}
+          placeholder="Telefone"
+        />
 
         <TextField label="E-mail" value={email ?? ''} editable={false} />
 
-        <Text style={{ color: isDark ? '#fff' : '#000' }}>Gênero</Text>
+        <ThemedText style={{ color: text }}>Gênero</ThemedText>
         <RadioGroup
           options={[
             { label: 'Masculino ♂', value: 'male' },
@@ -117,7 +138,7 @@ export default function UsersScreen() {
             { label: 'Outro ⚧', value: 'other' },
           ]}
           value={gender}
-          onChange={v => setGender(v as Gender)}
+          onChange={(v) => setGender(v as Gender)}
         />
 
         <TextField
@@ -128,7 +149,11 @@ export default function UsersScreen() {
           style={{ height: 100, textAlignVertical: 'top' }}
         />
 
-        <PrimaryButton title={loading ? 'Salvando...' : 'Salvar'} onPress={save} disabled={loading} />
+        <PrimaryButton
+          title={loading ? 'Salvando...' : 'Salvar'}
+          onPress={save}
+          disabled={loading}
+        />
       </ThemedView>
     </ScrollView>
   );
@@ -139,5 +164,4 @@ const styles = StyleSheet.create({
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   avatarWrap: { width: 72, height: 72, borderRadius: 36, overflow: 'hidden' },
   avatar: { width: 72, height: 72, borderRadius: 36 },
-  avatarPlaceholder: { backgroundColor: '#ddd' },
-});  
+});

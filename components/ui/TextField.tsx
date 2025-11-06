@@ -1,4 +1,4 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 
@@ -9,24 +9,27 @@ type Props = TextInputProps & {
 };
 
 export default function TextField({ label, error, style, rightAdornment, ...rest }: Props) {
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
   const hasRight = !!rightAdornment;
+
+  const text = useThemeColor({}, 'text');
+  const border = useThemeColor({}, 'border');
+  const inputBg = useThemeColor({}, 'inputBg');
+  const muted = useThemeColor({}, 'muted');
 
   return (
     <View style={{ gap: 6 }}>
-      {label ? <Text style={{ color: isDark ? '#fff' : '#000' }}>{label}</Text> : null}
+      {label ? <Text style={{ color: text }}>{label}</Text> : null}
 
       <View style={{ position: 'relative' }}>
         <TextInput
           {...rest}
           style={[
             styles.input,
-            { color: isDark ? '#fff' : '#000', borderColor: isDark ? '#555' : '#ccc', backgroundColor: isDark ? '#0b0b0b' : '#fff' },
+            { color: text, borderColor: border, backgroundColor: inputBg },
             hasRight && { paddingRight: 44 },
             style,
           ]}
-          placeholderTextColor={isDark ? '#888' : '#888'}
+          placeholderTextColor={muted}
         />
         {hasRight && <View style={styles.right}>{rightAdornment}</View>}
       </View>

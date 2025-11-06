@@ -1,4 +1,4 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   AsYouType,
   getCountryCallingCode,
@@ -20,8 +20,6 @@ type Props = {
 
 const PhoneField = forwardRef<PhoneFieldHandle, Props>(
   ({ defaultCountry = 'BR', initialE164, onChangeE164, placeholder = 'Telefone' }, ref) => {
-    const isDark = useColorScheme() === 'dark';
-
     const [country, setCountry] = useState<Iso2CountryCode>(defaultCountry);
     const [callingCode, setCallingCode] = useState<string>(getCountryCallingCode(defaultCountry as any));
     const [pretty, setPretty] = useState<string>('');
@@ -29,6 +27,11 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
 
     const inputRef = useRef<TextInput>(null);
     const lastE164Ref = useRef<string>('');
+
+    const border = useThemeColor({}, 'border');
+    const bg = useThemeColor({}, 'inputBg');
+    const text = useThemeColor({}, 'text');
+    const muted = useThemeColor({}, 'muted');
 
     useEffect(() => {
       try {
@@ -42,11 +45,9 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
         const cc = (() => {
           try { return getCountryCallingCode(country as any); } catch { return callingCode; }
         })();
-
         const digits = pretty.replace(/\D/g, '');
         const probe = `+${cc}${digits}`;
         const parsed = parsePhoneNumberFromString(probe);
-
         if (parsed?.isValid()) {
           const e164 = parsed.format('E.164');
           lastE164Ref.current = e164;
@@ -68,7 +69,6 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
       const digits = prettyLocal.replace(/\D/g, '');
       const probe = `+${cc}${digits}`;
       const parsed = parsePhoneNumberFromString(probe);
-
       const e164 = parsed?.isValid() ? parsed.format('E.164') : '';
       if (e164) lastE164Ref.current = e164;
       onChangeE164?.(e164);
@@ -87,11 +87,11 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
       setHydrated(true);
     }, [initialE164, hydrated, onChangeE164]);
 
-    const borderColor = useMemo(() => (isDark ? '#555' : '#ccc'), [isDark]);
+    const borderColor = useMemo(() => border, [border]);
 
     return (
       <View style={styles.wrap}>
-        <View style={[styles.container, { borderColor, backgroundColor: isDark ? '#0b0b0b' : '#fff' }]}>
+        <View style={[styles.container, { borderColor: borderColor, backgroundColor: bg }]}>
           <View style={styles.flagBox}>
             <CountryPicker
               countryCode={country}
@@ -108,14 +108,14 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
                 });
               }}
             />
-            <Text style={[styles.ccText, { color: isDark ? '#fff' : '#000' }]}>+{callingCode}</Text>
+            <Text style={[styles.ccText, { color: text }]}>+{callingCode}</Text>
           </View>
 
           <TextInput
             ref={inputRef}
             value={pretty}
-            onChangeText={(txt) => {
-              const raw = txt.trim();
+            onChangeText={(rawTxt) => {
+              const raw = rawTxt.trim();
               if (raw.startsWith('+')) {
                 const parsed = parsePhoneNumberFromString(raw);
                 if (parsed?.country) {
@@ -148,12 +148,11 @@ const PhoneField = forwardRef<PhoneFieldHandle, Props>(
               emitE164(next);
             }}
             placeholder={placeholder}
-            placeholderTextColor="#888"
+            placeholderTextColor={muted}
             keyboardType="phone-pad"
             {...(Platform.OS === 'web' ? { inputMode: 'numeric' as any } : {})}
-            style={[styles.input, { color: isDark ? '#fff' : '#000' }]}
+            style={[styles.input, { color: text }]}
           />
-
         </View>
       </View>
     );

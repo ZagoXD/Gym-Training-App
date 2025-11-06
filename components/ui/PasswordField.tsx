@@ -1,4 +1,4 @@
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Pressable, TextInputProps } from 'react-native';
@@ -8,9 +8,7 @@ type Props = TextInputProps & { label?: string };
 
 export default function PasswordField(props: Props) {
   const [hidden, setHidden] = useState(true);
-  const isDark = useColorScheme() === 'dark';
-
-  const color = isDark ? '#fff' : '#000';
+  const text = useThemeColor({}, 'text');
 
   return (
     <TextField
@@ -18,7 +16,7 @@ export default function PasswordField(props: Props) {
       secureTextEntry={hidden}
       rightAdornment={
         <Pressable
-          onPress={() => setHidden(v => !v)}
+          onPress={() => setHidden((v) => !v)}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel={hidden ? 'Mostrar senha' : 'Ocultar senha'}
@@ -26,7 +24,7 @@ export default function PasswordField(props: Props) {
           <MaterialCommunityIcons
             name={hidden ? 'eye-off-outline' : 'eye-outline'}
             size={22}
-            color={color}
+            color={text}
           />
         </Pressable>
       }

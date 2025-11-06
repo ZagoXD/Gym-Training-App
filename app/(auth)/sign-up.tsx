@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 
 import PasswordField from '@/components/ui/PasswordField';
 import PhoneField, { PhoneFieldHandle } from '@/components/ui/PhoneField';
@@ -8,7 +8,6 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import { RadioGroup } from '@/components/ui/RadioGroup';
 import TextField from '@/components/ui/TextField';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { signUpNoConfirm } from '@/services/auth';
 import { updateStudentProfile, type Gender } from '@/services/profile';
 import {
@@ -18,11 +17,12 @@ import {
   validateTrainerKey,
 } from '@/services/trainer';
 
+import { ThemedView } from '@/components/themed-view';
+import { useThemeColor } from '@/hooks/use-theme-color';
+
 type Role = 'trainer' | 'student';
 
 export default function SignUpScreen() {
-  const isDark = useColorScheme() === 'dark';
-
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +33,8 @@ export default function SignUpScreen() {
   const [loading, setLoading] = useState(false);
   const phoneRef = useRef<PhoneFieldHandle>(null);
   const [phoneE164, setPhoneE164] = useState('');
+
+  const muted = useThemeColor({}, 'muted');
 
   async function handle() {
     if (!displayName || !email || !password)
@@ -86,7 +88,7 @@ export default function SignUpScreen() {
   }
 
   return (
-    <View style={[styles.c, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+    <ThemedView style={styles.c}>
       <TextField placeholder="Nome" value={displayName} onChangeText={setDisplayName} />
 
       <PhoneField ref={phoneRef} defaultCountry="BR" onChangeE164={setPhoneE164} />
@@ -112,7 +114,7 @@ export default function SignUpScreen() {
           { label: 'Outro', value: 'other' },
         ]}
         value={gender}
-        onChange={v => setGender(v as Gender)}
+        onChange={(v) => setGender(v as Gender)}
       />
 
       {role === 'student' && (
@@ -130,10 +132,10 @@ export default function SignUpScreen() {
         onPress={handle}
         loading={loading}
       />
-      <Link href="/sign-in" style={[styles.b, { color: isDark ? '#bbb' : '#666' }]}>
+      <Link href="/sign-in" style={[styles.b, { color: muted }]}>
         Já tenho conta
       </Link>
-    </View>
+    </ThemedView>
   );
 }
 
