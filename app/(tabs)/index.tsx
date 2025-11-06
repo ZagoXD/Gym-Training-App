@@ -1,82 +1,59 @@
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/hooks/use-auth';
-import { getOwnProfileWithTrainer, listMyStudents, ProfileSummary, StudentRow } from '@/services/profile';
-import { Image } from 'expo-image';
+import { getOwnProfileWithTrainer } from '@/services/profile';
+import AlunoHome from '@/views/aluno/home';
+import TreinadorHome from '@/views/treinador/home';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function HomeScreen() {
   const { userId, loading } = useAuth();
-  const [profile, setProfile] = useState<ProfileSummary | null>(null);
-  const [students, setStudents] = useState<StudentRow[]>([]);
+  const [role, setRole] = useState<'student' | 'trainer' | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoadingProfile(false);
+      return;
+    }
     (async () => {
-      const p = await getOwnProfileWithTrainer(userId);
-      setProfile(p);
-      if (p.role === 'trainer') {
-        const list = await listMyStudents();
-        setStudents(list);
-      } else {
-        setStudents([]);
+      try {
+        const profile = await getOwnProfileWithTrainer(userId);
+        setRole(profile.role);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setLoadingProfile(false);
       }
     })();
   }, [userId]);
 
-  const headerLine =
-    !userId || loading || !profile
-      ? null
-      : profile.role === 'trainer'
-      ? `Bem-vindo, ${profile.display_name ?? 'Treinador'}`
-      : `Bem-vindo, ${profile.display_name ?? 'Aluno'}`;
+  if (loading || loadingProfile) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
-  const roleLine =
-    !userId || loading || !profile
-      ? null
-      : profile.role === 'trainer'
-      ? `Você é TREINADOR. Sua chave: ${profile.trainer_key ?? '—'}`
-      : `Você é ALUNO. Treinador: ${profile.trainer?.display_name ?? '—'} (chave: ${profile.trainer?.trainer_key ?? '—'})`;
+  if (role === 'trainer') {
+    return <TreinadorHome />;
+  }
+
+  if (role === 'student') {
+    return <AlunoHome />;
+  }
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">{headerLine ?? 'Welcome!'}</ThemedText>
-      </ThemedView>
-
-      {roleLine && (
-        <ThemedView style={styles.section}>
-          <ThemedText>{roleLine}</ThemedText>
-        </ThemedView>
-      )}
-
-      {profile?.role === 'trainer' && (
-        <ThemedView style={styles.section}>
-          <ThemedText type="subtitle">Meus alunos</ThemedText>
-          {students.length === 0 ? (
-            <ThemedText>Nenhum aluno vinculado.</ThemedText>
-          ) : (
-            students.map(s => (
-              <ThemedText key={s.user_id}>• {s.display_name ?? s.user_id}</ThemedText>
-            ))
-          )}
-        </ThemedView>
-      )}
-    </ParallaxScrollView>
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator size="large" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  reactLogo: { height: 178, width: 290, bottom: 0, left: 0, position: 'absolute' },
-  section: { marginTop: 12, paddingHorizontal: 16, gap: 6 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

@@ -11,7 +11,7 @@ export type ProfileSummary = {
   trainer?: { display_name: string | null; trainer_key: string | null } | null;
 };
 
-export type StudentRow = { user_id: string; display_name: string | null };
+export type StudentRow = { user_id: string; display_name: string | null; avatar_url: string | null };
 
 export async function getOwnProfileWithTrainer(userId: string): Promise<ProfileSummary> {
   const { data, error } = await supabase
