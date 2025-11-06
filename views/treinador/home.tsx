@@ -25,7 +25,7 @@ export default function TreinadorHome() {
 
   const headerLine = `Bem-vindo, ${profile?.display_name ?? 'Treinador'}`;
 
-  console.log(students);
+  //console.log(students);
 
   return (
     <ParallaxScrollView
