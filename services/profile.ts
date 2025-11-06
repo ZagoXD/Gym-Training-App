@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
+export type Gender = 'male' | 'female' | 'other';
+
 export type ProfileSummary = {
   display_name: string | null;
   phone: string | null;
@@ -8,6 +10,7 @@ export type ProfileSummary = {
   role: 'trainer' | 'student';
   trainer_key: string | null;
   trainer_id: string | null;
+  gender: Gender | null;
   trainer?: { display_name: string | null; trainer_key: string | null } | null;
 };
 
@@ -16,7 +19,7 @@ export type StudentRow = { user_id: string; display_name: string | null; avatar_
 export async function getOwnProfileWithTrainer(userId: string): Promise<ProfileSummary> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, phone, bio, avatar_url, role, trainer_key, trainer_id')
+    .select('display_name, phone, bio, avatar_url, role, trainer_key, trainer_id, gender')
     .eq('user_id', userId)
     .single();
   if (error) throw error;
@@ -39,7 +42,8 @@ export async function updateStudentProfile(
   userId: string,
   display_name: string,
   phone: string | null,
-  trainerId: string
+  trainerId: string,
+  gender: Gender,
 ) {
   const { error } = await supabase
     .from('profiles')
@@ -49,6 +53,7 @@ export async function updateStudentProfile(
       role: 'student',
       trainer_key: null,
       trainer_id: trainerId,
+      gender,
     })
     .eq('user_id', userId);
   if (error) throw error;
@@ -65,6 +70,7 @@ export async function updateOwnProfile(patch: {
   phone?: string | null;
   bio?: string | null;
   avatar_url?: string | null;
+  gender?: Gender | null;
 }) {
   const { data: me } = await supabase.auth.getUser();
   const uid = me.user?.id;

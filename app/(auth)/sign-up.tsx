@@ -10,7 +10,7 @@ import TextField from '@/components/ui/TextField';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { signUpNoConfirm } from '@/services/auth';
-import { updateStudentProfile } from '@/services/profile';
+import { updateStudentProfile, type Gender } from '@/services/profile';
 import {
   assignTrainerKeyWithRetry,
   normalizeTrainerKeyDisplay,
@@ -28,6 +28,7 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [role, setRole] = useState<Role>('student');
+  const [gender, setGender] = useState<Gender>('other');
   const [typedKey, setTypedKey] = useState('');
   const [loading, setLoading] = useState(false);
   const phoneRef = useRef<PhoneFieldHandle>(null);
@@ -69,10 +70,11 @@ export default function SignUpScreen() {
           displayName,
           phoneToSave ?? '',
           'trainer',
+          gender,
         );
         Alert.alert('Conta criada!', `Sua chave de treinador é: ${key}`);
       } else {
-        await updateStudentProfile(userId, displayName, phoneToSave, trainerId!);
+        await updateStudentProfile(userId, displayName, phoneToSave, trainerId!, gender);
       }
 
       router.replace('/(tabs)');
@@ -97,10 +99,20 @@ export default function SignUpScreen() {
       <RadioGroup
         options={[
           { label: 'Sou aluno', value: 'student' },
-        { label: 'Sou treinador', value: 'trainer' },
+          { label: 'Sou treinador', value: 'trainer' },
         ]}
         value={role}
         onChange={setRole}
+      />
+
+      <RadioGroup
+        options={[
+          { label: 'Masculino', value: 'male' },
+          { label: 'Feminino', value: 'female' },
+          { label: 'Outro', value: 'other' },
+        ]}
+        value={gender}
+        onChange={v => setGender(v as Gender)}
       />
 
       {role === 'student' && (

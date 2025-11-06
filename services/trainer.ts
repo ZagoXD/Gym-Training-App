@@ -1,10 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import { generateTrainerKey } from '@/lib/trainer-key';
+import type { Gender } from '@/services/profile';
 
 export function normalizeTrainerKeyRaw(v: string) {
   return (v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
 }
-
 export function normalizeTrainerKeyDisplay(v: string) {
   const raw = normalizeTrainerKeyRaw(v);
   if (raw.length <= 4) return raw;
@@ -47,6 +47,7 @@ export async function assignTrainerKeyWithRetry(
   display_name: string,
   phone: string,
   role: 'trainer',
+  gender: Gender,
 ) {
   for (let i = 0; i < 5; i++) {
     const candidate = normalizeTrainerKeyDisplay(generateTrainerKey());
@@ -58,6 +59,7 @@ export async function assignTrainerKeyWithRetry(
         role,
         trainer_key: candidate,
         trainer_id: null,
+        gender,
       })
       .eq('user_id', userId);
 
