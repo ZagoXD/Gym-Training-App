@@ -1,3 +1,1 @@
-# Welcome to your Expo app 👋
-
-Gym-Training app
+# Gym-Training app
