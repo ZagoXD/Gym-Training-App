@@ -7,6 +7,7 @@ export type CustomExercise = {
   description: string | null;
   category_id: number;
   images: string[];
+  video_url?: string | null;
   created_at?: string;
 };
 
@@ -15,6 +16,7 @@ export type CustomExerciseUpsert = {
   description?: string | null;
   category_id: number;
   imageUris: string[];
+  videoUrl?: string | null;
 };
 
 const BUCKET = 'exercises';
@@ -72,7 +74,7 @@ export async function listCustomExercises(): Promise<CustomExercise[]> {
   const { data, error } = await supabase
     .from('custom_exercises')
     .select(`
-      id, trainer_id, name, description, category_id, created_at,
+      id, trainer_id, name, description, category_id, created_at, video_url,
       custom_exercise_images ( url, sort )
     `)
     .order('created_at', { ascending: false });
@@ -86,6 +88,7 @@ export async function listCustomExercises(): Promise<CustomExercise[]> {
     description: row.description ?? null,
     category_id: row.category_id,
     created_at: row.created_at ?? undefined,
+    video_url: row.video_url ?? null,
     images: (row.custom_exercise_images ?? [])
       .sort((a: any, b: any) => (a.sort ?? 0) - (b.sort ?? 0))
       .map((i: any) => i.url),
@@ -93,11 +96,11 @@ export async function listCustomExercises(): Promise<CustomExercise[]> {
 }
 
 export async function createCustomExercise(input: CustomExerciseUpsert): Promise<string> {
-  const { name, description = null, category_id, imageUris } = input;
+  const { name, description = null, category_id, imageUris, videoUrl = null } = input;
 
   const { data: created, error } = await supabase
     .from('custom_exercises')
-    .insert([{ name, description, category_id }])
+    .insert([{ name, description, category_id, video_url: videoUrl }]) 
     .select('id')
     .single();
 
@@ -131,11 +134,11 @@ export async function createCustomExercise(input: CustomExerciseUpsert): Promise
 }
 
 export async function updateCustomExercise(id: string, input: CustomExerciseUpsert): Promise<string> {
-  const { name, description = null, category_id, imageUris } = input;
+  const { name, description = null, category_id, imageUris, videoUrl = null } = input;
 
   const upd = await supabase
     .from('custom_exercises')
-    .update({ name, description, category_id })
+    .update({ name, description, category_id, video_url: videoUrl })
     .eq('id', id);
   if (upd.error) throw upd.error;
 

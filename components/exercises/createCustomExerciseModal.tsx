@@ -27,6 +27,7 @@ type Props = {
     description?: string | null;
     category_id: number;
     images: string[];
+    video_url?: string | null;
   } | null;
 
   onCreated: (exerciseId: string) => void;
@@ -53,6 +54,7 @@ export default function CreateCustomExerciseModal({
   const [categoryId, setCategoryId] = useState<number | null>(defaultCategoryId);
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
 
   function isHttpUrl(s: string) {
     return /^https?:\/\//i.test(s);
@@ -65,11 +67,13 @@ export default function CreateCustomExerciseModal({
       setDescription(initial.description ?? '');
       setCategoryId(initial.category_id ?? null);
       setImages(initial.images ?? []);
+      setVideoUrl((initial as any).video_url ?? '');
     } else {
       setName('');
       setDescription('');
       setCategoryId(defaultCategoryId ?? null);
       setImages([]);
+      setVideoUrl('');
     }
   }, [open, isEditing, initial, defaultCategoryId]);
 
@@ -101,6 +105,7 @@ export default function CreateCustomExerciseModal({
         description: description.trim() || null,
         category_id: categoryId as number,
         imageUris: images,
+        videoUrl: videoUrl.trim() || null,
       };
 
       if (isEditing && initial) {
@@ -187,6 +192,17 @@ export default function CreateCustomExerciseModal({
               isDark={isDark}
               borderColor={border}
               includeAll={false}
+            />
+
+            <TextField
+              label="Link do vídeo (YouTube - opcional)"
+              placeholder="https://youtu.be/abc123..."
+              value={videoUrl}
+              onChangeText={setVideoUrl}
+              autoCapitalize="none"
+              keyboardType="url"
+              returnKeyType="done"
+              style={{ paddingVertical: Platform.select({ ios: 12, android: 10 }) }}
             />
 
             <ScrollView horizontal contentContainerStyle={{ gap: 8 }}>
