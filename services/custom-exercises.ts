@@ -211,3 +211,18 @@ export async function deleteCustomExercise(id: string): Promise<void> {
     await supabase.storage.from(BUCKET).remove(paths);
   }
 }
+
+export async function deleteCustomExerciseImage(exerciseId: string, url: string): Promise<void> {
+  const del = await supabase
+    .from('custom_exercise_images')
+    .delete()
+    .eq('exercise_id', exerciseId)
+    .eq('url', url);
+  if (del.error) throw del.error;
+
+  const path = extractPathFromPublicUrl(url);
+  if (path) {
+    const rm = await supabase.storage.from(BUCKET).remove([path]);
+    if (rm.error) throw rm.error;
+  }
+}

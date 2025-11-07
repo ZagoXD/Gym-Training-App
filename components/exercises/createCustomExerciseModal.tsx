@@ -6,9 +6,10 @@ import TextField from '@/components/ui/TextField';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import {
-    createCustomExercise,
-    updateCustomExercise,
-    type CustomExerciseUpsert,
+  createCustomExercise,
+  deleteCustomExerciseImage,
+  updateCustomExercise,
+  type CustomExerciseUpsert,
 } from '@/services/custom-exercises';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -52,6 +53,10 @@ export default function CreateCustomExerciseModal({
   const [categoryId, setCategoryId] = useState<number | null>(defaultCategoryId);
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  function isHttpUrl(s: string) {
+    return /^https?:\/\//i.test(s);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -186,12 +191,45 @@ export default function CreateCustomExerciseModal({
 
             <ScrollView horizontal contentContainerStyle={{ gap: 8 }}>
               {images.map((uri, i) => (
-                <Image
-                  key={`${uri}-${i}`}
-                  source={{ uri }}
-                  style={{ width: 88, height: 88, borderRadius: 8, borderWidth: 1, borderColor: border }}
-                />
+                <View key={`${uri}-${i}`} style={{ width: 88, height: 88, borderRadius: 8, overflow: 'hidden' }}>
+                  <Image
+                    source={{ uri }}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                  />
+
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        if (isEditing && initial && isHttpUrl(uri)) {
+                          setLoading(true);
+                          await deleteCustomExerciseImage(initial.id, uri);
+                        }
+                        setImages(prev => prev.filter(u => u !== uri));
+                      } catch (e: any) {
+                        alert(e.message ?? String(e));
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 999,
+                      backgroundColor: 'rgba(0,0,0,0.55)',
+                      borderWidth: 1,
+                      borderColor: border,
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <ThemedText style={{ color: '#fff', fontSize: 12 }}>✕</ThemedText>
+                  </TouchableOpacity>
+                </View>
               ))}
+
               <TouchableOpacity
                 onPress={pickImage}
                 style={{
