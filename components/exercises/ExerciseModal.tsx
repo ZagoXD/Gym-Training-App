@@ -50,6 +50,7 @@ export default function ExerciseModal({
   fg,
   muted,
   actions,
+  videoUrl,
 }: {
   open: ExerciseCardData | null;
   onClose: () => void;
@@ -58,11 +59,11 @@ export default function ExerciseModal({
   fg: string;
   muted: string;
   actions?: React.ReactNode;
+  videoUrl?: string;
 }) {
   const { width } = useWindowDimensions();
   const maxSheetH = '85%';
 
-  const videoUrl = 'https://www.youtube.com/shorts/xbvVqbKvUBc';
   const videoId = useMemo(() => (videoUrl ? extractYouTubeId(videoUrl) : null), [videoUrl]);
   const videoThumb = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
 

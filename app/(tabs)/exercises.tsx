@@ -415,6 +415,7 @@ export default function ExercisesScreen() {
         borderColor={border}
         fg={fg}
         muted={muted}
+        videoUrl={openCustom?.video_url ?? undefined}
         actions={
           isOwner ? (
             <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -461,6 +462,7 @@ export default function ExercisesScreen() {
           description: openCustom.description ?? '',
           category_id: openCustom.category_id,
           images: openCustom.images,
+          video_url: openCustom.video_url ?? null, 
         } : null}
         onCreated={async () => {
           await refreshCustoms();
